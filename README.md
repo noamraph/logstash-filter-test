@@ -4,6 +4,17 @@ json documents from various inputs, transform them according to a configuration
 file (a *filter*), and sends them to various outputs. This script helps you make
 sure that your filter does what you expect by writing a test suite.
 
+## Installation
+
+You can install using pip:
+
+```
+pip install logstash-filter-test
+```
+
+or just copy `logstash_filter_run.py` and `logstash_filter_test.py`. There are
+no dependencies. Python 3.5+ and 2.7 are supported.
+
 ## Example
 
 Here is a simple test suite file:
