@@ -4,6 +4,11 @@ json documents from various inputs, transform them according to a configuration
 file (a *filter*), and sends them to various outputs. This script helps you make
 sure that your filter does what you expect by writing a test suite.
 
+This is similar to
+[logstash-filter-verifier](https://github.com/magnusbaeck/logstash-filter-verifier).
+After being frustrated with it for a few days I decided to write my own. I find
+it to be much simpler and easier. Try it and decide for yourself!
+
 ## Installation
 
 You can install using pip:
