@@ -102,3 +102,11 @@ venv.bak/
 
 # mypy
 .mypy_cache/
+
+\.idea/logstash-filter-test\.iml
+
+\.idea/misc\.xml
+
+\.idea/modules\.xml
+
+\.idea/workspace\.xml
