@@ -5,6 +5,7 @@ import sys
 import json
 
 from logstash_filter_run import logstash_filter_run
+from logstash_filter_run import LOGSTASH_BIN_ALTERNATIVES
 
 
 # This is copied from https://github.com/linjackson78/jstyleson
@@ -110,7 +111,6 @@ def _remove_last_comma(str_list, before_index):
     if str_list[i] == ',':
         str_list[i] = ''
 
-
 def print_results(testcases, outputs):
     expecteds = [expected for _inp, expected in testcases]
     n_errs = 0
@@ -138,11 +138,11 @@ def print_results(testcases, outputs):
     return n_errs
 
 
-def logstash_filter_test(filter_fn='filter.conf', testcases_fn='testcases.js'):
+def logstash_filter_test(filter_fn='filter.conf', testcases_fn='testcases.js', logstash_bin_fn=None, remove_tempdir="yes"):
     testcases = json.loads(dispose(open(testcases_fn).read()))
     inputs = [inp for inp, _expected in testcases]
     filter_def = open(filter_fn).read()
-    outputs = logstash_filter_run(inputs, filter_def)
+    outputs = logstash_filter_run(inputs, filter_def, logstash_bin_fn, remove_tempdir == "yes")
     n_errs = print_results(testcases, outputs)
     return outputs, n_errs
 
@@ -154,9 +154,14 @@ def main():
                         help="File with logstash filter definition to test. default: filter.conf")
     parser.add_argument("--testcases", default="testcases.js",
                         help="File with testcases. default: testcases.js")
+    parser.add_argument("--logstash", default=None,
+                        help="Path to Logstash executable. default: " + ",".join(LOGSTASH_BIN_ALTERNATIVES))
+    parser.add_argument("--remove_tempdir", default="yes",
+                        help="Whether to remove the temp dir (yes/no). default: yes")
+
     args = parser.parse_args()
 
-    _outputs, n_errs = logstash_filter_test(args.filters, args.testcases)
+    _outputs, n_errs = logstash_filter_test(args.filters, args.testcases, args.logstash, args.remove_tempdir)
 
     return 0 if n_errs == 0 else 1
 
