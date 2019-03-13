@@ -79,6 +79,36 @@ fields that are defined must be equal to the fields in the output document.
 The output document may include other fields. To test that an output field
 doesn't exist, use `"field": null`.
 
+## Testing `[@metadata]`
+
+Logstash allows using a transient field called `[@metadata]`, which is not produced by any output plugins. This is useful if you want to influence the flow of the filter (and/or the output) section, but not by using a field that would be present in the output. The metadata field acts like a bucket for internal variables (it is a nested field on which you can set sub-fields. For example, in the filter section you could set `[@metadata][target_index]` to a desired value for an Elasticsearch index and then in the output section in the `elasticsearch` plugin you could use `%{[@metadata][target_index]}-%{+yyyy.MM.dd}` as your index name pattern.
+
+However, since `[@metadata]` is by definition not produced by the output section, it is consequently not possible to write test cases that verify that the filter section set the correct data in the `[@metadata]` field (or that it correctly didn't set metadata). Once your filter and output sections start relying on metadata it becomes critical that you are also able to write test cases that cover metadata. But, rejoice, as with logstash-filter-test you can still test metadata! The whole `[@metadata]` field will be copied into another field called `[__@metadata]`, allowing you do to something like this:
+
+```
+    [
+        {
+            "message" : "my sample log line",
+            "path" : "/path/to/source/file.log",
+            "host" : "my-host-name"
+        },
+        {
+            "__@metadata" : 
+            {
+                "target_index" : "kittycat"
+            },
+           "@timestamp" : "2019-02-10T00:19:02.106Z",
+           "hostname" : "my-host-name",
+           "level" : "INFO",
+           "source.file.path.raw" : "/path/to/source/file.log",
+           "tags" : null
+        }
+    ]
+```
+
+In addition, if you choose to not remove the temp directory that logstash-filter-test creates during execution (see corresponding command line argument), then you can have a look at the file `pipeline.d/output-ap`. Running your test cases through your filters will generate this output in the Ruby Awesome Print format, which is what Logstash's rubydebug codec uses. The AP format is just another format in addition to the JSON file `output-json` that logstash-filter-test also produces. The AP file is not actually used by logstash-filter-test, but it can be useful for debugging your test cases and filters, because the file contains the `[@metadata]` field exactly as set and modified by your filters (no renaming to `[__@metadata]`). It is also formatted in a more human-readable way than the JSON output file.
+
+
 ## Command line arguments
 
 | Argument | Description | Default |
