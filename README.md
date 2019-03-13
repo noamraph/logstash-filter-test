@@ -79,6 +79,21 @@ fields that are defined must be equal to the fields in the output document.
 The output document may include other fields. To test that an output field
 doesn't exist, use `"field": null`.
 
+## Command line arguments
+
+| Argument | Description | Default |
+| -------- | ----------- | ------- |
+| `--filters` | File with Logstash filter definition to test. | `filter.conf` |
+| `--testcases` | File with test cases. | `testcases.js` |
+| `--remove_tempdir` | Whether to remove the temp dir that is created during execution (yes/no). | `yes` (any other value will be equivalent to `no`) |
+| `--logstash` | Path to the Logstash executable. | \[ `/opt/logstash/bin/logstash`, `/usr/share/logstash/bin/logstash` \] |
+
+Example on Windows:
+
+```
+logstash_filter_test.py --remove_tempdir=yes --logstash C:\path\to\logstash-6.2.3\bin\logstash.bat --filters C:\path\to\logstash\indexer\config\filter.conf --testcases C:\path\to\logstash\indexer\test\testcases.js
+```
+
 ## Testing from Python
 
 If you don't like the testcase file format, it's easy to test by yourself:
