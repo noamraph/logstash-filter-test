@@ -3,6 +3,3 @@ services:
     build: .
     volumes:
       - .:/repo
-
-  
-  
