@@ -1,0 +1,5 @@
+services:
+  logstash_filter_test:
+    build: .
+    volumes:
+      - .:/repo

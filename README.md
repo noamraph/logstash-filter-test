@@ -92,3 +92,9 @@ If you don't like the testcase file format, it's easy to test by yourself:
   'b': 3,
   'host': 'myhost'}]
 ```
+
+## To use with docker compose
+Make sure to install docker in your local computer. 
+```
+docker compose up
+```
