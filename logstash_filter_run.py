@@ -17,6 +17,14 @@ PIPELINES_YML = """\
   pipeline.workers: 1
 """
 
+# Filter config which copies the otherwise hidden @metadata field and its sub-fields to a separate field
+# that will be accessible in the output. This allows writing test cases that can assert metadata values.
+POST_PROCESSOR_FILTER_CONF = """\
+filter {
+  mutate { copy => { "[@metadata]" => "__@metadata" } }
+}
+"""
+
 INPUT_OUTPUT_CONF = """\
 input {
   stdin {
@@ -27,9 +35,12 @@ output {
   file {
     path => "%s"
   }
+  file {
+    path => "%s"
+    codec => rubydebug { metadata => true }
+  }
 }
 """
-
 
 def logstash_filter_run(inputs, filter_def, logstash_bin=None, remove_tempdir=True):
     """
@@ -59,13 +70,25 @@ def logstash_filter_run(inputs, filter_def, logstash_bin=None, remove_tempdir=Tr
     os.mkdir(config_dir)
     os.mkdir(pipeline_dir)
     open(join(config_dir, 'logstash.yml'), 'w').close()
+
     with open(join(config_dir, 'pipelines.yml'), 'w') as f:
-        f.write(PIPELINES_YML.format(pipeline_dir))
-    output_fn = join(workdir, 'output')
+        if os.name == 'nt':
+            # Somehow, on Windows the path has to be prefixed with a slash (in front of the drive letter)
+            # and the path separator has to be the forward slash.
+            formatted_pipeline_dir = '/' + pipeline_dir.replace('\\', '/')
+        else:
+            formatted_pipeline_dir = pipeline_dir
+        f.write(PIPELINES_YML.format(formatted_pipeline_dir))
+
+    output_json_fn = join(workdir, 'output-json')
+    output_ap_fn = join(workdir, 'output-ap')
     with open(join(pipeline_dir, 'io.conf'), 'w') as f:
-        f.write(INPUT_OUTPUT_CONF % output_fn)
-    with open(join(pipeline_dir, 'filter.conf'), 'w') as f:
+        f.write(INPUT_OUTPUT_CONF % (output_json_fn, output_ap_fn))
+    with open(join(pipeline_dir, 'filter_1_candidate.conf'), 'w') as f:
         f.write(filter_def)
+    with open(join(pipeline_dir, 'filter_2_post_processor.conf'), 'w') as f:
+        f.write(POST_PROCESSOR_FILTER_CONF)
+        
     inputs_s = ''.join(s+'\n' for s in input_jsons)
     args = [logstash_bin, '--log.level=warn',
             '--path.settings', config_dir, '--path.data', data_dir]
@@ -76,7 +99,7 @@ def logstash_filter_run(inputs, filter_def, logstash_bin=None, remove_tempdir=Tr
     if rc != 0:
         raise RuntimeError("logstash returned non-zero return code {}"
                            .format(rc))
-    output_lines = list(open(output_fn))
+    output_lines = list(open(output_json_fn))
     if len(output_lines) != len(inputs):
         raise RuntimeError("Received {} outputs, expecting {}"
                            .format(len(output_lines), len(inputs)))
